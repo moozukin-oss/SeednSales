@@ -167,8 +167,92 @@
       box-shadow: 0 10px 25px rgba(0,0,0,0.1);
       transition: all 0.2s ease-in-out;
     }
+    .notice-header {
+      display: flex;
+      justify-content: space-between; /* 제목 왼쪽, 버튼 오른쪽 */
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .notice-header h2 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 700;
+    }
+    .notice-header .btn {
+      font-size: 13px;
+      padding: 6px 12px;  /* 공지 제목 옆이니 버튼을 좀 더 작게 */
+    }
 
-  </style>
+    .notice-list{
+      list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:8px;
+    }
+    .notice-item{
+      background:#f3f4f6;
+      border:1px solid #e5e7eb;
+      border-radius:999px;
+      padding:8px 12px;
+      line-height:1.5;
+      display:flex; align-items:center; gap:8px;
+
+      font-size:14px;   /* 다른 텍스트와 동일 크기 */
+      font-weight:400;  /* 기본 굵기 */
+      color:#111827;    /* 본문색과 동일 */
+    }
+
+    /* 모바일에서 살짝 여백 넉넉히(선택) */
+    @media (max-width:720px){
+      .notice-item{ padding:12px 14px; }
+    }
+
+    /* 상태 배지 */
+    .notice-badge{
+      padding:2px 8px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:600;
+      color:#fff;
+      white-space:nowrap;
+    }
+    .notice-badge.new{ background:#10b981; }     /* 초록 - NEW */
+    .notice-badge.update{ background:#f59e0b; }  /* 주황 - 변경 */
+    .notice-badge.alert{ background:#ef4444; }   /* 빨강 - 점검/중요 */
+      
+    /* 버튼 호버-리프트 효과 */
+    .card .btn{
+      transition: transform .15s ease, box-shadow .15s ease, background-color .15s ease, border-color .15s ease;
+      will-change: transform;
+    }
+    .card .btn:hover{
+      transform: translateY(-3px);
+      box-shadow: 0 10px 18px rgba(0,0,0,.12);
+    }
+    .card .btn:active{
+      transform: translateY(-1px);
+      box-shadow: 0 6px 12px rgba(0,0,0,.10);
+    }
+    /* 접근성: 키보드 포커스 표시 */
+    .card .btn:focus-visible{
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(45,127,249,.35);
+    }
+
+    /* 프라이머리 버튼 색감 살짝 강화(선택) */
+    .btn-primary:hover{
+      filter: brightness(0.95);
+    }
+    .btn-primary:active{
+      filter: brightness(0.6);
+    }
+
+    /* 모션 민감 사용자 배려 */
+    @media (prefers-reduced-motion: reduce){
+      .card .btn{ transition: none; }
+      .card .btn:hover, .card .btn:active{ transform: none; box-shadow: none; }
+    }  
+            
+      </style>
+
+
 </head>
 <body>
   <!-- 🔹 헤더 -->
@@ -179,12 +263,29 @@
   <!-- 🔹 본문 -->
   <div class="container">
     <section class="card col-12 col-6">
-      <h2>📣 공지</h2>
-      <div class="notice">
-        <p>1. 파일 다운로드는 뭐 받을지 확인 후 다운로드 가능 예정.</p>
-        <p>2. 구글폼은 연결 상태.</p>
+      <div class="notice-header">
+        <h2>📣 공지</h2>
+        <a class="btn btn-primary" href="http://pf.kakao.com/_pkMaj/chat" target="_blank" rel="noopener">
+          고객센터 연결
+        </a>
       </div>
+
+      <ul class="notice-list">
+        <li class="notice-item">
+          <span class="notice-badge new">NEW</span>
+          2025.09.07 : 어라라라 설치는 씨드앤이 우선 진행.
+        </li>
+        <li class="notice-item">
+          <span class="notice-badge update">나의취향</span>
+          양념치킨이 맛있는데...
+        </li>
+        <li class="notice-item">
+          <span class="notice-badge alert">점검</span>
+          09월 15~16일 연차입니다.
+        </li>
+      </ul>
     </section>
+
 
     <div class="grid">
       <section class="card col-12 col-6">
