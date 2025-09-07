@@ -8,6 +8,53 @@
   <!-- 🔹 Google Fonts: Roboto + Noto Sans KR -->
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 
+<!-- 1) 컨페티 라이브러리 (CDN) -->
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
+<!-- 2) 접속 시 한 번만 '펑~' 효과 -->
+<script>
+  // 사용자 접근성 배려: 저해상/저전력/감각 민감 사용자
+  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function burstConfetti() {
+    if (prefersReduced || typeof confetti !== 'function') return;
+
+    // 전체화면 컨페티 인스턴스
+    const myConfetti = confetti.create(null, { resize: true, useWorker: true });
+
+    // 중앙에서 강하게 한 번
+    myConfetti({
+      particleCount: 140,
+      spread: 90,
+      startVelocity: 55,
+      scalar: 1.1,
+      origin: { x: 0.5, y: 0.6 } // 화면 중앙 근처
+    });
+
+    // 좌/우에서 추가 버스트(약하게)
+    setTimeout(() => {
+      myConfetti({ particleCount: 60, angle: 60, spread: 70, origin: { x: 0.1, y: 0.6 } });
+      myConfetti({ particleCount: 60, angle: 120, spread: 70, origin: { x: 0.9, y: 0.6 } });
+    }, 180);
+
+    // 위쪽에서 살짝 흩뿌리기
+    setTimeout(() => {
+      myConfetti({ particleCount: 80, spread: 120, startVelocity: 35, origin: { x: 0.5, y: 0.2 } });
+    }, 360);
+
+    // 1.2초 후 자동 종료(캔버스는 자동 제거됨)
+    setTimeout(() => { myConfetti.reset(); }, 2200);
+  }
+
+  // 페이지 로드 후 200ms에 한 번 실행
+  window.addEventListener('load', () => {
+    setTimeout(burstConfetti, 200);
+  });
+
+  // (선택) 테스트용 함수: 콘솔에서 burstConfetti() 호출하면 다시 터집니다.
+</script>
+
+
   <style>
     body {
       /* 영문은 Roboto, 한글은 Noto Sans KR */
@@ -84,9 +131,9 @@
       line-height: 1.4;
     }
     .btn-primary {
-      background: #4f46e5;
+      background: #2196f3;
       color: #fff;
-      border-color: #4f46e5;
+      border-color: #2196f3;
     }
     .hint {
       color: #6b7280;
@@ -109,7 +156,7 @@
       padding: 12px 14px;
       margin-top: 8px;
       font-weight: bold;
-      border-left: 5px solid #f59e0b; /* 노란색 강조선 */
+      border-left: 5px solid #2196f3; /* 노란색 강조선 */
     }
 
     .notice p {
@@ -142,7 +189,7 @@
     <div class="grid">
       <section class="card col-12 col-6">
         <h2>📝 영업 현황/계약 신청</h2>
-        <p class="hint">계약 상황 및 계약 성사 후 이용하세요.</p>
+        <p class="hint">계약 상태 최신화 및 계약 성사 후 이용하세요.</p>
         <div class="row">
           <button class="btn btn-primary" onclick="location.href='https://forms.gle/fHVM4kfMH3dRgZeh7'">영업 완료 신청</button>
           <button class="btn btn-primary" onclick="location.href='https://docs.google.com/forms/d/예시폼ID/viewform'">영업 현황</button>
@@ -154,131 +201,10 @@
         <p class="hint">영업에 필요한 자료입니다.</p>
         <div class="row">
           <a class="btn btn-primary" href="images/logo.jpg" download>제안서</a>
-          <a class="btn btn-primary" href="files/회사소개서 (20250520).pdf" download>소개서</a>
+          <button class="btn btn-primary" onclick="location.href='https://seedn-my.sharepoint.com/:b:/g/personal/moozukin_seedn_onmicrosoft_com/EbjhDjCeye1Et1SfxYXfmqoBraOIf7SF_99DB-9_UFY3gg?e=tVTa8Y'">회사 소개서</button>
         </div>
       </section>
     </div>
-
-      <section class="card col-12">
-    <h2>📊 오늘 시간대별 방문자</h2>
-    <p class="hint">페이지에 접속하면 현재 시간대 카운트가 +1 증가합니다.</p>
-    <div style="max-width:960px">
-      <canvas id="visitsByHour" height="140"></canvas>
-    </div>
-    <div class="row" style="margin-top:8px">
-      <span>오늘 방문자 합계: <strong id="todayTotal">0</strong></span>
-      <span style="margin-left:14px">총 방문자: <strong id="grandTotal">0</strong></span>
-    </div>
-  </section>
-
-  <!-- Chart.js CDN (헤더가 아니라 여기 배치해도 됩니다) -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<script>
-  // ======= 설정 =======
-  const NAMESPACE = 'seednsales'; // 사이트 고유 키 (원하면 변경)
-  // ====================
-
-  // 오늘 날짜/시간 키 만들기
-  const now = new Date();
-  const yyyy = now.getFullYear();
-  const mm = String(now.getMonth() + 1).padStart(2, '0');
-  const dd = String(now.getDate()).padStart(2, '0');
-  const HH = String(now.getHours()).padStart(2, '0');
-  const todayKey = `${yyyy}-${mm}-${dd}`;
-  const hourKey = `${todayKey}-${HH}`;
-
-  // CountAPI 유틸
-  const hit  = (key) => fetch(`https://api.countapi.xyz/hit/${NAMESPACE}/${encodeURIComponent(key)}`)
-                          .then(r => r.json()).catch(()=>({value:0}));
-  const get  = (key) => fetch(`https://api.countapi.xyz/get/${NAMESPACE}/${encodeURIComponent(key)}`)
-                          .then(r => r.ok ? r.json() : {value:0})
-                          .catch(()=>({value:0}));
-
-  // 1) 현재 시간대 카운트 + 총 방문자 카운트 증가
-  //    (방문 시 한 번만 호출)
-  async function incrementCountersOnce() {
-    try {
-      await Promise.all([
-        hit('total'),          // 전체 누적
-        hit(todayKey),         // 오늘 누적
-        hit(hourKey),          // 오늘-현재시간 누적
-      ]);
-    } catch(e) {
-      // 실패해도 그래프 로딩은 진행
-    }
-  }
-
-  // 2) 00~23시 데이터 불러오기
-  async function loadTodayHourlySeries() {
-    const labels = Array.from({length:24}, (_,i)=> String(i).padStart(2,'0') + '시');
-    const keys   = Array.from({length:24}, (_,i)=> `${todayKey}-${String(i).padStart(2,'0')}`);
-    const values = [];
-
-    for (const k of keys) {
-      const { value } = await get(k);    // 존재하지 않으면 0 처리
-      values.push(value || 0);
-    }
-
-    // 보조 지표
-    const { value: todaySum } = await get(todayKey);
-    const { value: grandSum } = await get('total');
-
-    document.getElementById('todayTotal').textContent = todaySum || 0;
-    document.getElementById('grandTotal').textContent = grandSum || 0;
-
-    return { labels, values };
-  }
-
-  // 3) 차트 렌더 (선 그래프, y축 자동 스케일)
-  let visitsChart;
-  function renderLineChart(labels, data) {
-    const ctx = document.getElementById('visitsByHour').getContext('2d');
-
-    if (visitsChart) visitsChart.destroy(); // 재렌더 대비
-
-    visitsChart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels,
-        datasets: [{
-          label: '오늘 시간대별 방문자',
-          data,
-          tension: 0.3,
-          fill: false,
-          borderWidth: 2,
-          pointRadius: 3
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-          y: {
-            // 자동 스케일 (유동적). 바닥을 0 근처로 두고 싶다면 suggestedMin: 0 사용
-            suggestedMin: 0,
-            ticks: { precision: 0 }
-          }
-        },
-        interaction: { mode: 'index', intersect: false },
-        plugins: {
-          legend: { display: true }
-        }
-      }
-    });
-  }
-
-  // 4) 실행: 증가 → 데이터 로드 → 차트
-  (async () => {
-    await incrementCountersOnce();
-    const { labels, values } = await loadTodayHourlySeries();
-    renderLineChart(labels, values);
-  })();
-</script>
-
-
-
-
 
     <div class="footer">© <span id="year"></span> SeedN</div>
   </div>
